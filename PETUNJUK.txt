@@ -1,0 +1,86 @@
+PEMBARUAN TERBARU: DETEKSI OTOMATIS BRAVE
+
+Gejala: Onya berhenti dengan Could not find Chrome 146...
+Jika paket downloader sudah dipasang, cukup salin file berikut dari ZIP ini:
+- src/browser.js ke D:\Project\bot-whatsapp\src\browser.js
+- src/index.js ke D:\Project\bot-whatsapp\src\index.js
+- scripts/doctor.js ke D:\Project\bot-whatsapp\scripts\doctor.js
+Hentikan bot dengan Ctrl+C sebelum mengganti file.
+
+Jalankan kembali:
+cd D:\Project\bot-whatsapp
+npm.cmd start
+
+Pastikan muncul [BOT-BROWSER] Menggunakan: ...brave.exe
+Brave dicari otomatis di lokasi pemasangan standar Windows.
+CHROME_PATH yang benar tetap diprioritaskan. Jika path salah, perbaiki atau
+kosongkan CHROME_PATH= di .env agar menggunakan deteksi otomatis.
+Jika lokasi browser tidak ditemukan, buka brave://version di Brave, salin
+Executable Path, lalu isi CHROME_PATH di .env.
+
+Tidak perlu memasang Chrome atau memasang ulang npm/yt-dlp.
+Pertahankan .env, sesi login, dan executable yt-dlp yang sudah dipasang.
+7 pengujian deteksi browser lulus; pembukaan Brave langsung pada laptop pengguna
+belum diuji. 45 pengujian paket downloader telah lulus pada versi sebelumnya.
+
+PETUNJUK LENGKAP DOWNLOADER
+
+ONYA - PEMBARUAN DOWNLOADER TIKTOK DAN FACEBOOK
+23 September 2026
+
+Untuk bot yang sudah ada di D:\Project\bot-whatsapp:
+1. Hentikan bot dengan Ctrl+C.
+2. Cadangkan kode yang pernah kamu edit sendiri.
+3. Ekstrak ZIP ini ke folder terpisah.
+4. Salin isi folder src, scripts, dan file package.json ke proyek lama.
+   Gabungkan folder dan pilih Replace untuk file yang sama.
+   Pertahankan .env, node_modules, dan sesi login lama.
+   src/whatsapp-compat.js versi perbaikan pengiriman media sudah termasuk.
+5. Di PowerShell:
+   cd D:\Project\bot-whatsapp
+   node scripts/setup-downloader.js
+   npm.cmd run doctor
+   npm.cmd start
+6. Tunggu Onya aktif. Jika nama masih lama, atur BOT_NAME=Onya di .env
+   lalu hentikan dan mulai ulang bot.
+
+Tidak perlu npm install ulang untuk proyek lama ini.
+Pemasang membutuhkan internet untuk mengambil yt-dlp resmi beserta checksum.
+Nama akun/nomor WhatsApp dan konfigurasi Brave tidak perlu diubah.
+
+PERINTAH BARU
+!downloader
+!tiktok URL_VIDEO
+!tt URL_VIDEO
+!facebook URL_VIDEO
+!fb URL_VIDEO
+
+Ganti URL_VIDEO dengan link asli, tanpa tanda kurung dan tanpa kata URL_VIDEO.
+Satu tautan per perintah. Uji dari nomor WhatsApp lain.
+
+Hasil: dokumen MP4, suara dipertahankan bila ada.
+Batas bawaan: 16 MB, satu downloader sekaligus, waktu mengambil video 180 detik.
+File sementara dibersihkan setelah selesai/gagal dan saat penghentian normal.
+Tautan privat, album foto, dan siaran langsung belum didukung.
+Untuk link pendek Facebook yang meminta login/tidak mengalihkan alamat,
+gunakan URL video lengkap dari browser: facebook.com/reel/... atau watch/?v=...
+
+Pengaturan opsional baru (boleh tidak ditambahkan karena ada nilai bawaan):
+MAX_DOWNLOAD_MB=16
+DOWNLOAD_TIMEOUT_SECONDS=180
+MAX_DOWNLOAD_SECONDS=600
+YTDLP_PATH=
+
+Memperbarui yt-dlp: hentikan bot, jalankan node scripts/setup-downloader.js lagi.
+Jika YTDLP_PATH diisi, perbarui executable pada path yang kamu tentukan itu.
+Baca README.md untuk pemasangan manual, pengaturan, dan penjelasan penggunaan RAM/disk.
+
+VALIDASI
+45 pengujian lulus pada lingkungan Linux dengan Node.js 24.19.0.
+Pemasang resmi berhasil mengunduh dan memverifikasi yt-dlp 2026.08.19.
+CLI yt-dlp + FFmpeg diuji mengunduh dari server lokal dan menghasilkan MP4 dengan audio.
+Pengiriman WhatsApp disimulasikan. TikTok/Facebook langsung serta runtime Windows
+belum diuji di laptop pengguna. Keberhasilan tiap link mengikuti akses yang disediakan situs.
+
+Untuk menjalankan tes, salin juga folder test dari ZIP lalu jalankan npm.cmd test.
+Tanpa executable lokal yt-dlp, satu tes integrasi CLI dilewati.

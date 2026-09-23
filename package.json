@@ -1,0 +1,20 @@
+{
+  "name": "bot-whatsapp-destian",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Onya: balasan WhatsApp, konversi stiker, dan downloader TikTok/Facebook/YouTube MP4 serta MP3.",
+  "main": "src/index.js",
+  "engines": { "node": ">=22.0.0" },
+  "scripts": {
+    "start": "node src/index.js",
+    "doctor": "node scripts/doctor.js",
+    "setup:downloader": "node scripts/setup-downloader.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "qrcode-terminal": "0.12.0",
+    "sharp": "0.35.4",
+    "whatsapp-web.js": "1.34.7"
+  },
+  "optionalDependencies": { "ffmpeg-static": "5.3.0" }
+}
