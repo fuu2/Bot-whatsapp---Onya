@@ -8,6 +8,8 @@ const config = require('./config');
 const { createHandler } = require('./handler');
 const { cancelDownloads } = require('./downloader');
 const { browserLaunchOptions, mediaPlaybackSupport } = require('./browser');
+const { ReminderService } = require('./reminders');
+const { zoneInfo } = require('./reminder-time');
 console.log(`[BOT-DOWNLOADER v3] Pengiriman hasil: ${config.downloadAsDocument ? 'dokumen' : 'pemutar video/audio WhatsApp'}.`);
 
 let browserOptions;
@@ -25,14 +27,19 @@ const client = new Client({
   webVersionCache: { type: 'local', path: config.cachePath },
   puppeteer: browserOptions
 });
+const reminders = new ReminderService({
+  file: config.reminderPath, timeZone: config.reminderTimeZone, name: config.name,
+  send: (chatId, text) => client.sendMessage(chatId, text, { sendSeen: false })
+});
 
 let closing = false;
 async function shutdown(code = 0) {
   if (closing) return;
   closing = true;
+  reminders.pause();
   const deadline = setTimeout(() => process.exit(code), 10000);
   deadline.unref();
-  await cancelDownloads();
+  await Promise.allSettled([cancelDownloads(), reminders.stop()]);
   try { await client.destroy(); } catch { /* Browser mungkin sudah tertutup. */ }
   process.exit(code);
 }
@@ -44,6 +51,7 @@ client.on('qr', qr => {
 client.on('authenticated', () => console.log('Login berhasil. Menyiapkan WhatsApp...'));
 client.on('ready', async () => {
   console.log(`${config.name} aktif! Kirim !menu dari nomor WhatsApp lain.`);
+  reminders.start();
   try {
     const support = await mediaPlaybackSupport(client.pupPage);
     console.log(`[BOT-CODEC] Browser melaporkan H264=${support.h264}; AAC=${support.aac}; MP3=${support.mp3}.`);
@@ -62,15 +70,20 @@ client.on('disconnected', () => {
   console.error('WhatsApp terputus. Periksa internet, lalu jalankan kembali npm start.');
   void shutdown(1);
 });
-const handler = createHandler({ client, MessageMedia, config });
+const handler = createHandler({ client, MessageMedia, config, reminders });
 client.on('message', msg => {
   if (!closing) void handler(msg).catch(error => console.error('Handler gagal:', error.name));
 });
 process.on('SIGINT', () => void shutdown());
 process.on('SIGTERM', () => void shutdown());
 
-console.log(`Memulai ${config.name}...`);
-client.initialize().catch(error => {
+async function main() {
+  await reminders.init();
+  console.log(`[BOT-REMINDER v1] Pengingat aktif; waktu bawaan ${zoneInfo(config.reminderTimeZone).label}. Penyimpanan: data/reminders.json.`);
+  console.log(`Memulai ${config.name}...`);
+  await client.initialize();
+}
+main().catch(error => {
   console.error('Bot gagal dimulai:', error.message);
   console.error('Jalankan npm.cmd run doctor untuk memeriksa Node.js, browser, dan FFmpeg.');
   void shutdown(1);

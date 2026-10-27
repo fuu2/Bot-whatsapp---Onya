@@ -1,86 +1,168 @@
-PEMBARUAN TERBARU: DETEKSI OTOMATIS BRAVE
+ONYA - PENGINGAT PRESENSI / JADWAL PRIBADI
+24 September 2026
 
-Gejala: Onya berhenti dengan Could not find Chrome 146...
-Jika paket downloader sudah dipasang, cukup salin file berikut dari ZIP ini:
-- src/browser.js ke D:\Project\bot-whatsapp\src\browser.js
-- src/index.js ke D:\Project\bot-whatsapp\src\index.js
-- scripts/doctor.js ke D:\Project\bot-whatsapp\scripts\doctor.js
-Hentikan bot dengan Ctrl+C sebelum mengganti file.
+PEMBARUAN TERBARU
 
-Jalankan kembali:
-cd D:\Project\bot-whatsapp
-npm.cmd start
+1. Hentikan bot dengan Ctrl+C.
+2. Ekstrak paket ke folder terpisah, lalu salin seluruh isi src ke
+   D:\Project\bot-whatsapp\src dan pilih Replace untuk file yang sama.
+   File baru reminder-time.js dan reminders.js wajib ikut disalin.
+3. Pertahankan .env, folder sesi login, dan folder data yang sudah ada.
+4. Pengaturan waktu opsional pada .env: REMINDER_TIMEZONE=Asia/Jakarta
+   Jika belum ditambahkan, bot otomatis memakai WIB.
+5. Jalankan dari folder proyek:
+   cd D:\Project\bot-whatsapp
+   npm.cmd start
+6. Pastikan [BOT-REMINDER v1] muncul. Tunggu bot aktif, lalu kirim perintah
+   melalui chat pribadi ke nomor Onya. Tidak perlu npm install ulang.
 
-Pastikan muncul [BOT-BROWSER] Menggunakan: ...brave.exe
-Brave dicari otomatis di lokasi pemasangan standar Windows.
-CHROME_PATH yang benar tetap diprioritaskan. Jika path salah, perbaiki atau
-kosongkan CHROME_PATH= di .env agar menggunakan deteksi otomatis.
-Jika lokasi browser tidak ditemukan, buka brave://version di Brave, salin
-Executable Path, lalu isi CHROME_PATH di .env.
+CONTOH PENGINGAT
 
-Tidak perlu memasang Chrome atau memasang ulang npm/yt-dlp.
-Pertahankan .env, sesi login, dan executable yt-dlp yang sudah dipasang.
-7 pengujian deteksi browser lulus; pembukaan Brave langsung pada laptop pengguna
-belum diuji. 45 pengujian paket downloader telah lulus pada versi sebelumnya.
+!ingatkan 07:30 presensi online
+!ingatkan besok 07:30 presensi online
+!ingatkan setiap hari 07:30 presensi online
+!ingatkan 25-09-2026 07:30 presensi online
+!ingatkan 5 menit cek presensi
 
-PETUNJUK LENGKAP DOWNLOADER
+ingatkan saya untuk presensi online jam 07:30
 
-ONYA - PEMBARUAN DOWNLOADER TIKTOK DAN FACEBOOK
+Jam memakai format 24 jam. Waktu bawaan WIB. Tanpa tanggal, jam yang
+sudah lewat dijadwalkan besok. Periksa tanggal/jam pada balasan konfirmasi.
+
+!pengingat                  Melihat jadwal milikmu
+!hapus-pengingat ID          Membatalkan pengingat sesuai ID dari daftar
+!bantuan-pengingat           Panduan lengkap
+
+ID misalnya a1b2c3d4: !hapus-pengingat a1b2c3d4
+Pengingat harian harus dibatalkan jika sudah tidak diperlukan.
+Maksimal 20 pengingat per chat. Fitur ini khusus chat pribadi.
+
+BOT HARUS TETAP MENYALA
+
+Jadwal disimpan dalam data/reminders.json dan bertahan setelah restart.
+Jika bot/laptop mati atau sleep, pesan tidak dapat dikirim pada waktunya.
+Pengingat sekali yang terlewat dikirim saat bot tersambung lagi dengan
+keterangan terlambat. Jadwal harian yang tertinggal beberapa hari hanya
+mengirim kejadian terlewat paling baru, lalu melanjutkan jadwal berikutnya.
+Penjadwal memeriksa tiap detik; pengiriman dapat terlambat karena koneksi.
+
+Kegagalan pengiriman dicoba ulang sampai tiga kali dengan jeda satu menit.
+Jika proses mati saat kirim, status pengiriman terputus terlihat pada
+!pengingat. Periksa apakah pesannya sudah masuk, lalu hapus/buat ulang
+jadwal bila perlu. Tidak ada jaminan pengiriman tepat sekali saat gangguan.
+
+WITA: REMINDER_TIMEZONE=Asia/Makassar
+WIT: REMINDER_TIMEZONE=Asia/Jayapura
+Perubahan zona bawaan tidak menggeser pengingat yang sudah dibuat.
+Gunakan satu proses bot per folder data. Cadangkan data sebelum pindah server.
+
+PANDUAN FITUR SEBELUMNYA
+
+ONYA - PEMUTAR VIDEO DAN AUDIO LANGSUNG DI WHATSAPP
 23 September 2026
 
-Untuk bot yang sudah ada di D:\Project\bot-whatsapp:
+PEMBARUAN DARI DOWNLOADER VERSI SEBELUMNYA
+
 1. Hentikan bot dengan Ctrl+C.
+2. Ekstrak ZIP ke folder terpisah. Salin seluruh isi folder src ke
+   D:\Project\bot-whatsapp\src dan pilih Replace untuk file yang sama.
+3. Tambahkan atau ubah DOWNLOAD_AS_DOCUMENT=false dalam file .env aktif.
+   Jangan menimpa .env dengan .env.example.
+4. Jalankan npm.cmd start dari D:\Project\bot-whatsapp.
+5. Pastikan ada [BOT-DOWNLOADER v3] dan mode pemutar video/audio WhatsApp.
+6. Kirim ulang perintah downloader; pesan dokumen lama tidak berubah.
+
+Pembaruan tampilan ini tidak memerlukan instalasi npm/yt-dlp ulang.
+VIDEO_AS_DOCUMENT hanya untuk !tovideo; downloader memakai DOWNLOAD_AS_DOCUMENT.
+Audio dikirim sebagai audio biasa dengan tombol putar, bukan voice note.
+Video diubah ke H.264/AAC; rasio tampilan dipertahankan. Konversi memakai CPU
+selama proses. Batas ukuran, waktu, dan pembersihan file sementara tetap berlaku.
+Browser yang digunakan akan melaporkan dukungan codec pada baris [BOT-CODEC].
+Jika video/audio gagal terkirim, sertakan baris tersebut dan log error pengiriman.
+
+PEMBARUAN LENGKAP / MEMASANG DOWNLOADER PERTAMA KALI
+
+1. Hentikan bot dengan Ctrl+C di terminal.
 2. Cadangkan kode yang pernah kamu edit sendiri.
 3. Ekstrak ZIP ini ke folder terpisah.
-4. Salin isi folder src, scripts, dan file package.json ke proyek lama.
-   Gabungkan folder dan pilih Replace untuk file yang sama.
-   Pertahankan .env, node_modules, dan sesi login lama.
-   src/whatsapp-compat.js versi perbaikan pengiriman media sudah termasuk.
-5. Di PowerShell:
+4. Salin seluruh isi folder src, scripts, test, serta package.json dan README.md
+   ke D:\Project\bot-whatsapp. Gabungkan folder dan pilih Replace untuk file sama.
+   Pastikan src\download-url.js ikut disalin: file ini baru.
+   Pertahankan .env, node_modules, tools, dan sesi login lama.
+5. Jalankan di PowerShell dari folder proyek, bukan dari folder src:
+
    cd D:\Project\bot-whatsapp
    node scripts/setup-downloader.js
    npm.cmd run doctor
    npm.cmd start
-6. Tunggu Onya aktif. Jika nama masih lama, atur BOT_NAME=Onya di .env
-   lalu hentikan dan mulai ulang bot.
 
-Tidak perlu npm install ulang untuk proyek lama ini.
-Pemasang membutuhkan internet untuk mengambil yt-dlp resmi beserta checksum.
-Nama akun/nomor WhatsApp dan konfigurasi Brave tidak perlu diubah.
+6. Pastikan log startup memuat:
+   [BOT-DOWNLOADER v3] Pengiriman hasil: pemutar video/audio WhatsApp.
+   [BOT-BROWSER] Menggunakan: ...brave.exe
+7. Tunggu Onya aktif. Kirim !downloader dari nomor WhatsApp lain.
 
-PERINTAH BARU
-!downloader
-!tiktok URL_VIDEO
-!tt URL_VIDEO
-!facebook URL_VIDEO
-!fb URL_VIDEO
+Tidak perlu npm install ulang jika dependensi bot versi sebelumnya sudah terpasang.
+Gunakan Node.js 22 atau lebih baru. Pemasang memperbarui yt-dlp resmi ke folder
+tools dan memeriksa checksum. Python tidak diperlukan di Windows.
+Jika YTDLP_PATH di .env menunjuk lokasi lain, perbarui executable di lokasi itu
+atau kosongkan YTDLP_PATH= agar bot memakai file dalam folder tools.
 
-Ganti URL_VIDEO dengan link asli, tanpa tanda kurung dan tanpa kata URL_VIDEO.
-Satu tautan per perintah. Uji dari nomor WhatsApp lain.
+PERINTAH
 
-Hasil: dokumen MP4, suara dipertahankan bila ada.
-Batas bawaan: 16 MB, satu downloader sekaligus, waktu mengambil video 180 detik.
-File sementara dibersihkan setelah selesai/gagal dan saat penghentian normal.
-Tautan privat, album foto, dan siaran langsung belum didukung.
-Untuk link pendek Facebook yang meminta login/tidak mengalihkan alamat,
-gunakan URL video lengkap dari browser: facebook.com/reel/... atau watch/?v=...
+!fb URL_VIDEO        Video Facebook menjadi MP4
+!tt URL_VIDEO        Video TikTok menjadi MP4
+!ytmp4 URL_VIDEO     Video YouTube atau Shorts menjadi MP4
+!ytmp3 URL_VIDEO     Audio video YouTube menjadi MP3
+!ttaudio URL_VIDEO   Audio video TikTok menjadi MP3
+!downloader         Panduan lengkap dan alias perintah
 
-Pengaturan opsional baru (boleh tidak ditambahkan karena ada nilai bawaan):
-MAX_DOWNLOAD_MB=16
-DOWNLOAD_TIMEOUT_SECONDS=180
-MAX_DOWNLOAD_SECONDS=600
-YTDLP_PATH=
+Ganti URL_VIDEO dengan link asli dari aplikasi, tanpa tanda kurung.
+Satu tautan per perintah. Hasil dikirim sebagai video/audio dengan pemutar.
+Jika DOWNLOAD_AS_DOCUMENT=true, hasil dikirim sebagai dokumen.
+Audio MP3 dikonversi 128 kbps. Gunakan URL video TikTok yang memiliki suara,
+bukan halaman profil atau kumpulan sound. Batas bawaan tiap file 16 MB,
+durasi sumber 600 detik jika diketahui, dan satu unduhan sekaligus.
+Waktu mengunduh plus konversi maksimal 180 detik; pengiriman WhatsApp terpisah.
+File sementara dihapus setelah selesai/gagal dan saat bot dihentikan normal.
 
-Memperbarui yt-dlp: hentikan bot, jalankan node scripts/setup-downloader.js lagi.
-Jika YTDLP_PATH diisi, perbarui executable pada path yang kamu tentukan itu.
-Baca README.md untuk pemasangan manual, pengaturan, dan penjelasan penggunaan RAM/disk.
+PERBAIKAN FACEBOOK
 
-VALIDASI
-45 pengujian lulus pada lingkungan Linux dengan Node.js 24.19.0.
-Pemasang resmi berhasil mengunduh dan memverifikasi yt-dlp 2026.08.19.
-CLI yt-dlp + FFmpeg diuji mengunduh dari server lokal dan menghasilkan MP4 dengan audio.
-Pengiriman WhatsApp disimulasikan. TikTok/Facebook langsung serta runtime Windows
-belum diuji di laptop pengguna. Keberhasilan tiap link mengikuti akses yang disediakan situs.
+Versi ini menerima lebih banyak bentuk link bagikan dan postingan video.
+Host mobile tidak dipaksa kembali ke www saat redirect. Cookie pengunjung
+disimpan sementara selama resolusi link; bot juga membaca alamat video dari
+metadata halaman. Bot tidak mengambil cookies login dari Brave.
 
-Untuk menjalankan tes, salin juga folder test dari ZIP lalu jalankan npm.cmd test.
-Tanpa executable lokal yt-dlp, satu tes integrasi CLI dilewati.
+Jika Facebook tetap gagal, coba URL lengkap video dari browser, misalnya
+facebook.com/reel/ID atau facebook.com/watch/?v=ID.
+Kirim URL asli yang gagal dan log terbaru untuk pemeriksaan lebih lanjut.
+Screenshot error saja belum menunjukkan URL yang digunakan.
+Tautan yang meminta login, video privat, playlist, album foto, dan live
+belum didukung. Video publik juga dapat ditolak oleh situs sumber.
+
+BRAVE
+
+Deteksi otomatis Brave dan perbaikan ID/pengiriman media v2 sudah termasuk.
+CHROME_PATH yang benar tetap dipakai. Jika salah, perbaiki atau kosongkan
+CHROME_PATH= dalam .env untuk deteksi otomatis. Untuk lokasi khusus, buka
+brave://version dan salin Executable Path ke CHROME_PATH.
+Nama bot memakai BOT_NAME=Onya. Pengaturan .env yang lain tetap dapat dipakai.
+
+PENGUJIAN
+
+18 tes pengingat mencakup waktu WIB/WITA/WIT, penyimpanan, restart, jadwal
+sekali/harian, pembatalan, kepemilikan chat, retry, dan kegagalan penulisan.
+Pengiriman WhatsApp disimulasikan; penerimaan nyata perlu dicoba di akunmu.
+
+86 pengujian lulus di Linux dengan Node.js 24.19.0 dan yt-dlp 2026.08.19.
+yt-dlp dan FFmpeg asli diuji memakai server media lokal: gabungan MP4+audio,
+MP3 dari trek audio, MP3 dari video bersuara, dan penolakan MP3 dari video tanpa suara.
+Normalisasi MP4 diperiksa: H.264 Main/yuv420p, AAC, 30 fps, portrait, dan faststart.
+Pengujian pengiriman memeriksa opsi video/audio biasa serta mode dokumen opsional.
+Tes resolver memeriksa redirect mobile, metadata, cookie sementara, serta loop.
+Tes ini tidak membuktikan akses ke video tertentu di situs sumber.
+Pengiriman WhatsApp disimulasikan; runtime Windows dan penerimaan WhatsApp
+perlu dicoba pada laptop/akun pengguna.
+
+Untuk menjalankan tes: npm.cmd test
+Tes CLI dilewati jika executable lokal yt-dlp belum dipasang.
+Baca README.md untuk pemasangan dari awal, konfigurasi, dan struktur kode.

@@ -183,6 +183,7 @@ test('menu Onya memuat downloader dan petunjuk URL tanpa emoji', async () => {
   assert.match(sent[0][1], /!tiktok/);
   assert.match(sent[0][1], /!facebook/);
   assert.match(sent[1][1], /16 MB/);
+  assert.match(sent[1][1], /tombol putar/);
   assert.doesNotMatch(sent.map(item => item[1]).join(''), /\p{Extended_Pictographic}/u);
 });
 
@@ -202,7 +203,8 @@ test('perintah dan alias downloader mengirim MP4 hanya ke chat peminta', async (
   assert.ok(sent.every(item => item[0] === '222@lid'));
   for (const item of sent.filter(item => typeof item[1] !== 'string')) {
     assert.equal(item[1].mimetype, 'video/mp4');
-    assert.equal(item[2].sendMediaAsDocument, true);
+    assert.equal(item[2].sendMediaAsDocument, false);
+    assert.equal(item[2].sendVideoAsGif, false);
     assert.equal(item[2].sendSeen, false);
   }
 });
@@ -214,6 +216,47 @@ test('URL kosong atau domain keliru memberi petunjuk tanpa menjalankan downloade
   assert.equal(sent.length, 2);
   assert.match(sent[0][1], /satu URL/);
   assert.match(sent[1][1], /HTTPS resmi/);
+});
+
+test('YouTube MP4/MP3 dan TikTok audio memakai pemutar meski VIDEO_AS_DOCUMENT lama bernilai true', async () => {
+  const calls = [];
+  const { sent, handle } = setup({}, {}, async (url, platform, config, options) => {
+    calls.push({ url, platform, format: options.format });
+    if (options.format === 'mp3') options.onStage('mengubah audio menjadi MP3');
+    return { buffer: Buffer.from('media'), mimetype: options.format === 'mp3' ? 'audio/mpeg' : 'video/mp4',
+      filename: `onya-${platform}.${options.format}` };
+  });
+  const cases = [
+    ['!ytmp4', 'youtube', 'mp4'], ['!youtube', 'youtube', 'mp4'], ['!yt', 'youtube', 'mp4'],
+    ['!ytmp3', 'youtube', 'mp3'], ['!ytaudio', 'youtube', 'mp3'],
+    ['!ttaudio', 'tiktok', 'mp3'], ['!ttmp3', 'tiktok', 'mp3'], ['!tiktokaudio', 'tiktok', 'mp3']
+  ];
+  for (const [command, platform, format] of cases) {
+    const url = platform === 'youtube' ? 'https://youtu.be/BaW_jenozKc' : 'https://vt.tiktok.com/ZSabc/';
+    await handle(message({ body: `${command} ${url}`, from: '222@lid' }));
+    assert.equal(calls.at(-1).platform, platform);
+    assert.equal(calls.at(-1).format, format);
+    const [chat, media, options] = sent.at(-1);
+    assert.equal(chat, '222@lid');
+    assert.equal(media.mimetype, format === 'mp3' ? 'audio/mpeg' : 'video/mp4');
+    assert.equal(media.filename, `onya-${platform}.${format}`);
+    assert.equal(options.sendMediaAsDocument, false);
+    assert.equal(options.sendAudioAsVoice, false);
+    assert.equal(options.sendVideoAsGif, false);
+    if (format === 'mp3') assert.equal(options.caption, undefined);
+    assert.equal(options.sendSeen, false);
+  }
+});
+
+test('opsi DOWNLOAD_AS_DOCUMENT eksplisit dapat mengirim file dengan caption dan menu yang sesuai', async () => {
+  const { sent, handle } = setup({ downloadAsDocument: true }, {}, async () => ({
+    buffer: Buffer.from('mp3'), mimetype: 'audio/mpeg', filename: 'onya-youtube.mp3'
+  }));
+  await handle(message({ body: '!downloader' }));
+  assert.match(sent.at(-1)[1], /dokumen MP4 atau MP3/);
+  await handle(message({ body: '!ytmp3 https://youtu.be/BaW_jenozKc' }));
+  assert.equal(sent.at(-1)[2].sendMediaAsDocument, true);
+  assert.equal(sent.at(-1)[2].caption, 'Audio MP3 dari YouTube.');
 });
 
 test('hanya satu unduhan berjalan dan slot dilepas sesudah error', async () => {

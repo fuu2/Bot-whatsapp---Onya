@@ -1,5 +1,6 @@
 'use strict';
 const path = require('node:path');
+const { zoneInfo } = require('./reminder-time');
 
 try {
   process.loadEnvFile(path.join(__dirname, '..', '.env'));
@@ -23,6 +24,9 @@ function boolean(name, fallback) {
   return value === 'true';
 }
 
+const reminderTimeZone = process.env.REMINDER_TIMEZONE?.trim() || 'Asia/Jakarta';
+zoneInfo(reminderTimeZone);
+
 module.exports = Object.freeze({
   name: process.env.BOT_NAME || 'Onya',
   stickerPack: (process.env.STICKER_PACK || 'Stiker Onya').slice(0, 64),
@@ -34,6 +38,8 @@ module.exports = Object.freeze({
   maxStickerSeconds: number('MAX_STICKER_SECONDS', 6, 1, 10),
   videoAsDocument: boolean('VIDEO_AS_DOCUMENT', true),
   downloadAsDocument: boolean('DOWNLOAD_AS_DOCUMENT', false),
+  reminderTimeZone,
+  reminderPath: path.join(__dirname, '..', 'data', 'reminders.json'),
   maxDownloadBytes: number('MAX_DOWNLOAD_MB', 16, 1, 32) * 1024 * 1024,
   downloadTimeoutMs: number('DOWNLOAD_TIMEOUT_SECONDS', 180, 30, 300) * 1000,
   maxDownloadSeconds: number('MAX_DOWNLOAD_SECONDS', 600, 10, 1800),

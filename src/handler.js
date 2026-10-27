@@ -3,6 +3,8 @@ const converters = require('./media');
 const downloader = require('./downloader');
 const { randomUUID } = require('node:crypto');
 const { normalizeMessageId } = require('./whatsapp-compat');
+const { ReminderError, reminderConfirmation, reminderList } = require('./reminders');
+const { reminderHelp } = require('./reminder-time');
 const COMMANDS = new Map([
   ['!menu', 'menu'], ['!help', 'menu'], ['!ping', 'ping'],
   ['!sticker', 'sticker'], ['!stiker', 'sticker'], ['!s', 'sticker'],
@@ -11,7 +13,11 @@ const COMMANDS = new Map([
   ['!facebook', 'facebook'], ['!fb', 'facebook'],
   ['!ytmp4', 'ytmp4'], ['!youtube', 'ytmp4'], ['!yt', 'ytmp4'],
   ['!ytmp3', 'ytmp3'], ['!ytaudio', 'ytmp3'],
-  ['!ttaudio', 'ttaudio'], ['!tiktokaudio', 'ttaudio'], ['!ttmp3', 'ttaudio']
+  ['!ttaudio', 'ttaudio'], ['!tiktokaudio', 'ttaudio'], ['!ttmp3', 'ttaudio'],
+  ['!ingatkan', 'reminderCreate'], ['!remind', 'reminderCreate'],
+  ['!pengingat', 'reminderList'], ['!reminders', 'reminderList'],
+  ['!hapus-pengingat', 'reminderCancel'], ['!batal-pengingat', 'reminderCancel'],
+  ['!bantuan-pengingat', 'reminderHelp']
 ]);
 const DOWNLOADS = {
   tiktok: { platform: 'tiktok', label: 'TikTok', format: 'mp4' },
@@ -42,7 +48,9 @@ function menu(config) {
     '!sticker / !s — Foto, GIF, atau video menjadi stiker\n' +
     '!toimg — Stiker menjadi gambar PNG\n!tovideo — Stiker bergerak menjadi MP4\n' +
     '!downloader — Panduan unduh dari URL\n!tiktok <url> — Unduh video TikTok\n!facebook <url> — Unduh video Facebook\n' +
-    '!ytmp4 <url> — Unduh video YouTube\n!ytmp3 <url> — Unduh audio YouTube\n!ttaudio <url> — Unduh audio video TikTok\n\n' +
+    '!ytmp4 <url> — Unduh video YouTube\n!ytmp3 <url> — Unduh audio YouTube\n!ttaudio <url> — Unduh audio video TikTok\n' +
+    '!ingatkan 07:30 presensi online — Buat pengingat\n!pengingat — Lihat jadwalmu\n' +
+    '!hapus-pengingat ID — Batalkan jadwal\n!bantuan-pengingat — Contoh jadwal harian/tanggal\n\n' +
     'Kirim foto/video dengan caption !sticker, atau balas media dengan perintah.\n' +
     `Video: ${config.maxStickerSeconds} detik pertama, tanpa suara. Maksimal media ${config.maxMediaBytes / 1024 / 1024} MB.\n` +
     'Untuk mengubah stiker, balas stikernya dengan !toimg atau !tovideo.';
@@ -53,7 +61,7 @@ function autoReply(body, config) {
     return `Waalaikumsalam! Saya ${config.name}. Ketik !menu untuk melihat fitur.`;
   }
   if (/\b(hai|halo|hello|hi|pagi|siang|sore|malam)\b/i.test(body)) {
-    return `Halo! Saya ${config.name}. Saya bisa membuat stiker, mengubah stiker menjadi gambar/video, dan mengunduh media TikTok, Facebook, atau YouTube. Ketik !menu untuk melihat perintah.`;
+    return `Halo! Saya ${config.name}. Saya bisa membuat stiker, mengunduh media, dan mengingatkan jadwalmu. Ketik !menu untuk melihat perintah.`;
   }
   if (/\b(terima kasih|makasih|thanks)\b/i.test(body)) return 'Sama-sama!';
   return `Pesanmu sudah diterima oleh ${config.name}. Ini balasan otomatis. Ketik !menu untuk melihat perintah.`;
@@ -70,7 +78,7 @@ function errorDetails(error) {
 }
 
 // Client, MessageMedia, dan konverter dapat diganti dengan simulasi saat pengujian.
-function createHandler({ client, MessageMedia, config, convert = converters, download = downloader.downloadMedia, now = Date.now, log = console }) {
+function createHandler({ client, MessageMedia, config, convert = converters, download = downloader.downloadMedia, reminders, now = Date.now, log = console }) {
   const seen = new Map();
   const lastReply = new Map();
   const busyChats = new Set();
@@ -101,7 +109,9 @@ function createHandler({ client, MessageMedia, config, convert = converters, dow
     if (id) seen.set(id, now());
     const body = (msg.body || '').trim();
     const firstWord = body.split(/\s+/)[0].toLowerCase();
-    const command = COMMANDS.get(firstWord);
+    const naturalReminder = body.match(/^(?:tolong\s+)?ingatkan(?:\s+|$)/i);
+    const command = naturalReminder ? 'reminderCreate' : COMMANDS.get(firstWord);
+    const reminderInput = naturalReminder ? body.slice(naturalReminder[0].length).trim() : body.slice(firstWord.length).trim();
     if (isGroup && !command) return;
     if (!command && !config.autoReply) return;
     prune(lastReply, 10 * 60 * 1000);
@@ -123,6 +133,25 @@ function createHandler({ client, MessageMedia, config, convert = converters, dow
       if (command === 'menu') return await send(menu(config));
       if (command === 'downloadMenu') return await send(downloadMenu(config));
       if (command === 'ping') return await send('Pong! Bot aktif.');
+      if (command?.startsWith('reminder')) {
+        if (isGroup) return await send('Gunakan fitur pengingat melalui chat pribadi dengan Onya.');
+        if (command === 'reminderHelp' || command === 'reminderCreate' && !reminderInput) {
+          return await send(reminderHelp(config.reminderTimeZone));
+        }
+        if (!reminders) return await send('Fitur pengingat belum siap. Pemilik bot perlu menyalin seluruh pembaruan src lalu mulai ulang bot.');
+        if (command === 'reminderList') {
+          checkpoint('membaca daftar pengingat');
+          return await send(reminderList(await reminders.list(from)));
+        }
+        if (command === 'reminderCancel') {
+          checkpoint('membatalkan pengingat');
+          const row = await reminders.cancel(from, reminderInput);
+          return await send(`Pengingat ${row.id} dibatalkan.`);
+        }
+        checkpoint('menyimpan pengingat');
+        const row = await reminders.create(from, reminderInput, id || '');
+        return await send(reminderConfirmation(row));
+      }
       if (!command) {
         if (firstWord.startsWith('!')) return await send('Perintah belum dikenali. Ketik !menu.');
         return await send(autoReply(body, config));
@@ -204,7 +233,7 @@ function createHandler({ client, MessageMedia, config, convert = converters, dow
     } catch (error) {
       log.error(`[BOT-DIAG ${trace}] GAGAL saat ${stage}\n${errorDetails(error)}`);
       if (error?.cause) log.error(`[BOT-DIAG ${trace}] Penyebab tambahan:\n${errorDetails(error.cause)}`);
-      const response = error instanceof converters.MediaError || error instanceof downloader.DownloadError
+      const response = error instanceof converters.MediaError || error instanceof downloader.DownloadError || error instanceof ReminderError
         ? `${error.message}\nKode pemeriksaan: ${trace}.`
         : `Proses gagal saat ${stage}. Kode pemeriksaan: ${trace}. Pemilik bot dapat melihat detail di terminal.`;
       try { await send(response); } catch (replyError) {

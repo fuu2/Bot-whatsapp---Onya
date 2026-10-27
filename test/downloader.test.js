@@ -40,7 +40,7 @@ test('domain palsu, URL lokal, profil, shell payload dan platform yang keliru di
 
 test('hasil MP4 dibaca setelah batas ukuran diperiksa dan direktori kerja dibersihkan', async () => {
   let folder;
-  const result = await downloadVideo(tiktok, 'tiktok', { maxDownloadBytes: 1024 }, {
+  const result = await downloadVideo(tiktok, 'tiktok', { maxDownloadBytes: 1024, downloadAsDocument: true }, {
     run: async (args, options) => {
       folder = options.cwd;
       assert.equal(args.at(-1), tiktok);
@@ -83,7 +83,7 @@ test('tautan pendek Facebook mengikuti redirect resmi dan menghentikan redirect 
 test('oversize, format palsu, error proses, dan video tanpa hasil membersihkan file sementara', async () => {
   for (const scenario of ['large', 'invalid', 'failure', 'missing']) {
     let folder;
-    await assert.rejects(downloadVideo(facebook, 'facebook', { maxDownloadBytes: 100 }, {
+    await assert.rejects(downloadVideo(facebook, 'facebook', { maxDownloadBytes: 100, downloadAsDocument: true }, {
       run: async (args, options) => {
         folder = options.cwd;
         await fs.writeFile(path.join(folder, 'media.part'), 'partial');
@@ -130,6 +130,30 @@ test('pemasang memilih executable resmi Windows yang sesuai arsitektur', () => {
   assert.equal(assetFor('win32', 'arm64'), 'yt-dlp_arm64.exe');
   assert.equal(assetFor('win32', 'ia32'), 'yt-dlp_x86.exe');
   assert.equal(assetFor('other', 'x64'), undefined);
+});
+
+test('konversi video gagal atau hasil terlalu besar tetap membersihkan sumber dan hasil sementara', async () => {
+  for (const scenario of ['failure', 'oversize']) {
+    let folder;
+    await assert.rejects(downloadVideo(tiktok, 'tiktok', { maxDownloadBytes: 100 }, {
+      run: async (args, options) => {
+        folder = options.cwd;
+        if (options.tool === 'yt-dlp') await fs.writeFile(path.join(folder, 'media.mp4'), mp4);
+        else {
+          await fs.writeFile(path.join(folder, 'playable.mp4'), Buffer.alloc(101));
+          if (scenario === 'failure') throw new DownloadError('Video gagal disiapkan');
+        }
+        return { stdout: '', stderr: '' };
+      }
+    }), DownloadError);
+    await assert.rejects(fs.access(folder), { code: 'ENOENT' });
+  }
+});
+
+test('kegagalan FFmpeg video memberi pesan konversi video, bukan pesan MP3', async () => {
+  await assert.rejects(runYtDlp(['-e', 'console.error("decoder failure"); process.exit(1)'], {
+    executable: process.execPath, tool: 'ffmpeg', conversion: 'mp4'
+  }), error => /Video gagal disiapkan/.test(error.message) && !/MP3/.test(error.message));
 });
 
 test('menutup bot menghentikan proses downloader dan menunggu pembersihan file', async () => {

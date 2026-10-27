@@ -2,7 +2,7 @@
   "name": "bot-whatsapp-destian",
   "version": "1.0.0",
   "private": true,
-  "description": "Onya: balasan WhatsApp, konversi stiker, dan downloader TikTok/Facebook/YouTube MP4 serta MP3.",
+  "description": "Onya: pengingat pribadi, balasan WhatsApp, konversi stiker, dan downloader TikTok/Facebook/YouTube.",
   "main": "src/index.js",
   "engines": { "node": ">=22.0.0" },
   "scripts": {

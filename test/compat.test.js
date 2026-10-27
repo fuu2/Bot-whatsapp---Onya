@@ -167,7 +167,7 @@ test('reproduksi: ID internal media merusak pengiriman meski ID pesan memakai fo
 
 for (const [mimetype, document, oldIds] of [
   ['image/png', true, false], ['video/mp4', true, false],
-  ['video/mp4', false, false], ['image/png', true, true]
+  ['video/mp4', false, false], ['audio/mpeg', false, false], ['image/png', true, true]
 ]) {
   test(`kirim ${mimetype}, dokumen=${document}, ID lama=${oldIds}: ID dan metadata media terjaga`, async () => {
     const f = fixture(true, oldIds);
